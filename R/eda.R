@@ -4,7 +4,7 @@ needs(plotly)
 needs(tidytext)
 needs(wordcloud)
 
-rawdata <- read_csv("./raw data/Enterprise_Dataset_Inventory.csv")
+rawdata <- read_csv("./github/raw data/Enterprise_Dataset_Inventory.csv")
 
 dim(rawdata)
 str(rawdata)
@@ -94,15 +94,22 @@ ggplot_byclassificationandoffice <-
   scale_fill_brewer(palette="YlOrRd")+
   labs(x = "Agency", y = "Number of Entries", title = "Composition of the Enterprise Dataset Inventory",
        fill = "Dataset Classification Name")+
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+  theme(
        axis.text.x = element_blank(),
        axis.ticks.x = element_blank(),
        panel.grid.major = element_blank(),
-       panel.background = element_rect(fill = 'white', colour = 'white'))
+       panel.background = element_rect(fill = 'white', colour = 'white'),
+       legend.title = element_blank(),
+       axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 15, l = 0)))
 
 
-ggplotly_byclassificationandoffice <- ggplotly(p = ggplot_byclassificationandoffice, tooltip = c("y","text")) %>% 
-  layout(legend = list(x = 0.1, y = 1.0, orientation = 'h'))
+ggplotly_byclassificationandoffice <- 
+  ggplotly(p = ggplot_byclassificationandoffice, tooltip = c("y","text"),
+                                               width = 600, height = 450) %>% 
+  layout(autosize = F,
+         legend = list(x = 0.6, y = 0.9),
+         margin = list(l = 70, r = 20, b = 10, t = 40))
+
 api_create(ggplotly_byclassificationandoffice, filename = "plotly_dcEDI_byclassificationandoffice")
 
 ## to better understand how open the various offices are, we can normalize the data, dividing the individual classification values by
@@ -120,11 +127,14 @@ ggplot_byclassificationandoffice_normalized <-
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
         panel.grid.major = element_blank(),
-        panel.background = element_rect(fill = 'white', colour = 'white'))
+        panel.background = element_rect(fill = 'white', colour = 'white'),
+        legend.title = element_blank(),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
 
 ggplotly_byclassificationandoffice_normalized <- 
-  ggplotly(p = ggplot_byclassificationandoffice_normalized, tooltip = c("y","text")) %>% 
-  layout(legend = list(x = 0.1, y = 1.0, orientation = 'h'))
+  ggplotly(p = ggplot_byclassificationandoffice_normalized, tooltip = c("y","text"), width = 600, height = 450) %>% 
+  layout(autosize = F,
+         legend = list(x = 1.1, y = 0.6))
 
 api_create(ggplotly_byclassificationandoffice_normalized, filename = "plotly_dcEDI_byclassificationandoffice_normalized")
 
@@ -150,12 +160,21 @@ data.count <-
   count(word) 
 
 for (i in 1:length(unique(data.count$DATASET_CLASSIFICATION_NAME))){
-  png(paste0("wordcloud_", 
-              unique(data.count$DATASET_CLASSIFICATION_NAME)[i], ".png"), width=600,height=500)
+  png(paste0("./github/images/wordcloud_", 
+              unique(data.count$DATASET_CLASSIFICATION_NAME)[i], ".png"), width=500,height=400)
     data.count %>% 
     filter(DATASET_CLASSIFICATION_NAME == unique(data.count$DATASET_CLASSIFICATION_NAME)[i]
            ) %>% 
     with(wordcloud(word, n, c(5,.3), min.freq = 10, max.words = 50, rot.per = 0.2,
-                   random.color = F, colors = gray.colors(5, start = 0.9, end = 0.3)))
+                   random.color = F))
     dev.off()
 }  
+
+png(paste0("./github/images/wordcloud_Restricted Confidential", 
+           ".png"), width=800,height=600)
+data.count %>% 
+  filter(DATASET_CLASSIFICATION_NAME == "Restricted Confidential"
+  ) %>% 
+  with(wordcloud(word, n, c(5,.3), min.freq = 10, max.words = 50, rot.per = 0.2,
+                 random.color = T))
+dev.off()
